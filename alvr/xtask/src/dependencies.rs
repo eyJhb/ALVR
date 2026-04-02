@@ -405,8 +405,9 @@ fn get_android_openxr_loaders(selection: OpenXRLoadersSelection) {
         "_lynx",
         // TODO: fix when upstream is not borked
         "https://developer.yvrdream.com/yvrdoc/sdk/openxr/yvr_openxr_mobile_sdk_2.0.0.zip",
+        "yvr_openxr_mobile_sdk_2.0.0/OpenXR/Libs/Android/arm64-v8a",
         // "https://portal.lynx-r.com/downloads/download/16", // version 1.0.0
-        "jni/arm64-v8a",
+        // "jni/arm64-v8a",
     );
 }
 
