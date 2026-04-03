@@ -97,12 +97,16 @@ public:
         InitDriverLog(vr::VRDriverLog());
 
         if (this->early_hmd_initialization) {
+            Info("DriverProvider::Init: early_hmd_initialization=true, registering HMD now");
             auto hmd = new Hmd();
             // Note: we disable awaiting for Acivate() call. That will only be called after
             // IServerTrackedDeviceProvider::Init() (this function) returns.
             hmd->register_device(false);
             this->hmd = std::unique_ptr<Hmd>(hmd);
             this->tracked_devices.insert({ HEAD_ID, this->hmd.get() });
+            Info("DriverProvider::Init: HMD registered");
+        } else {
+            Info("DriverProvider::Init: early_hmd_initialization=false, deferring HMD registration");
         }
 
         return vr::VRInitError_None;
@@ -249,6 +253,7 @@ bool InitializeStreaming() {
 
     if (!g_driver_provider.devices_initialized) {
         if (!g_driver_provider.early_hmd_initialization) {
+            Info("InitializeStreaming: deferred HMD registration (early_hmd_initialization=false)");
             auto hmd = new Hmd();
             if (!hmd->register_device(false)) {
                 Error("Failed to register HMD");
@@ -256,6 +261,9 @@ bool InitializeStreaming() {
             }
             g_driver_provider.hmd = std::unique_ptr<Hmd>(hmd);
             g_driver_provider.tracked_devices.insert({ HEAD_ID, g_driver_provider.hmd.get() });
+            Info("InitializeStreaming: deferred HMD registered, Activate() will be called asynchronously by SteamVR");
+        } else {
+            Info("InitializeStreaming: HMD was already registered early, skipping registration");
         }
 
         // Note: for controllers, hands and trackers don't bail out if registration fails

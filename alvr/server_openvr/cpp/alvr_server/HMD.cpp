@@ -156,7 +156,10 @@ bool Hmd::activate() {
 #endif
         }
 
-        DriverReadyIdle(this->device_class == vr::TrackedDeviceClass_HMD);
+        bool isHmd = this->device_class == vr::TrackedDeviceClass_HMD;
+        Info("Hmd::Activate: calling DriverReadyIdle(setDefaultChaprone=%d)", (int)isHmd);
+        DriverReadyIdle(isHmd);
+        Info("Hmd::Activate: DriverReadyIdle returned");
     }
 
     if (this->device_class == vr::TrackedDeviceClass_HMD) {

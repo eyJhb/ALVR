@@ -17,24 +17,28 @@ std::mutex chaperone_mutex;
 bool isOpenvrInit = false;
 
 void InitOpenvrClient() {
-    Debug("InitOpenvrClient");
+    Debug("InitOpenvrClient: enter");
 
 #ifndef __APPLE__
     std::unique_lock<std::mutex> lock(chaperone_mutex);
 
     if (isOpenvrInit) {
+        Debug("InitOpenvrClient: already initialized, skipping");
         return;
     }
 
     vr::EVRInitError error;
     // Background needed for VRCompositor()->GetTrackingSpace()
+    Debug("InitOpenvrClient: calling vr::VR_Init(VRApplication_Background)");
     vr::VR_Init(&error, vr::VRApplication_Background);
+    Debug("InitOpenvrClient: vr::VR_Init returned, error=%d", (int)error);
 
     if (error != vr::VRInitError_None) {
         Warn("Failed to init OpenVR client! Error: %d", error);
         return;
     }
     isOpenvrInit = true;
+    Debug("InitOpenvrClient: success");
 #endif
 }
 
@@ -56,7 +60,7 @@ void ShutdownOpenvrClient() {
 bool IsOpenvrClientReady() { return isOpenvrInit; }
 
 void _SetChaperoneArea(float areaWidth, float areaHeight) {
-    Debug("SetChaperoneArea");
+    Debug("SetChaperoneArea: enter (%.1f x %.1f)", areaWidth, areaHeight);
 
 #ifndef __APPLE__
     std::unique_lock<std::mutex> lock(chaperone_mutex);
@@ -78,24 +82,31 @@ void _SetChaperoneArea(float areaWidth, float areaHeight) {
     auto setup = vr::VRChaperoneSetup();
 
     if (setup != nullptr) {
+        Debug("SetChaperoneArea: setting perimeter/pose/size");
         vr::VRChaperoneSetup()->SetWorkingPerimeter(
             reinterpret_cast<vr::HmdVector2_t*>(perimeterPoints), 4
         );
         vr::VRChaperoneSetup()->SetWorkingStandingZeroPoseToRawTrackingPose(&MATRIX_IDENTITY);
         vr::VRChaperoneSetup()->SetWorkingSeatedZeroPoseToRawTrackingPose(&MATRIX_IDENTITY);
         vr::VRChaperoneSetup()->SetWorkingPlayAreaSize(areaWidth, areaHeight);
+        Debug("SetChaperoneArea: calling CommitWorkingCopy(EChaperoneConfigFile_Live)");
         vr::VRChaperoneSetup()->CommitWorkingCopy(vr::EChaperoneConfigFile_Live);
+        Debug("SetChaperoneArea: CommitWorkingCopy done");
+    } else {
+        Warn("SetChaperoneArea: VRChaperoneSetup() returned null, skipping");
     }
 
     auto settings = vr::VRSettings();
 
     if (settings != nullptr) {
         // Hide SteamVR Chaperone
+        Debug("SetChaperoneArea: hiding chaperone bounds");
         vr::VRSettings()->SetFloat(
             vr::k_pch_CollisionBounds_Section, vr::k_pch_CollisionBounds_FadeDistance_Float, 0.0f
         );
     }
 
+    Debug("SetChaperoneArea: done");
 #endif
 }
 

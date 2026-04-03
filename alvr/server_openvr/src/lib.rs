@@ -269,15 +269,25 @@ fn event_loop(events_receiver: mpsc::Receiver<ServerCoreEvent>) {
 }
 
 extern "C" fn driver_ready_idle(set_default_chap: bool) {
+    alvr_common::info!("driver_ready_idle: enter (set_default_chap={set_default_chap})");
     thread::spawn(move || {
+        alvr_common::info!("driver_ready_idle: calling InitOpenvrClient");
         unsafe { InitOpenvrClient() };
+        alvr_common::info!("driver_ready_idle: InitOpenvrClient returned");
 
         if set_default_chap {
             // call this when inside a new thread. Calling this on the parent thread will crash SteamVR
+            alvr_common::info!("driver_ready_idle: calling SetChaperoneArea");
             unsafe {
                 SetChaperoneArea(2.0, 2.0);
             }
+            alvr_common::info!("driver_ready_idle: SetChaperoneArea returned");
+        } else {
+            alvr_common::info!(
+                "driver_ready_idle: skipping SetChaperoneArea (set_default_chap=false)"
+            );
         }
+        alvr_common::info!("driver_ready_idle: thread done");
     });
 }
 
@@ -423,9 +433,17 @@ pub unsafe extern "C" fn HmdDriverFactory(
         return ptr::null_mut();
     };
 
-    let dashboard_process_paths = sysinfo::System::new_all()
-        .processes_by_name(OsStr::new(&afs::dashboard_fname()))
-        .filter_map(|proc| Some(proc.exe()?.to_owned()))
+    let system = sysinfo::System::new_all();
+    let dashboard_fname = afs::dashboard_fname();
+    // Collect all matching processes along with their exe paths (None if unavailable)
+    let all_dashboard_procs = system
+        .processes_by_name(OsStr::new(&dashboard_fname))
+        .map(|proc| (proc.pid(), proc.exe().map(|p| p.to_owned())))
+        .collect::<Vec<_>>();
+
+    let dashboard_process_paths = all_dashboard_procs
+        .iter()
+        .filter_map(|(_pid, exe)| exe.clone())
         .collect::<Vec<_>>();
 
     // Check that there is no active dashboard instance not part of this driver installation
@@ -488,7 +506,23 @@ pub unsafe extern "C" fn HmdDriverFactory(
             // When there is already a ALVR dashboard running, initialize the HMD device early to
             // avoid buggy SteamVR behavior
             // NB: we already bail out before if the dashboards don't belong to this streamer
-            let early_hmd_initialization = !dashboard_process_paths.is_empty();
+            alvr_common::info!(
+                "HmdDriverFactory: filesystem_layout.dashboard_exe()={:?}",
+                filesystem_layout.dashboard_exe()
+            );
+            alvr_common::info!(
+                "HmdDriverFactory: found {} process(es) named {:?}:",
+                all_dashboard_procs.len(),
+                dashboard_fname
+            );
+            for (pid, exe) in &all_dashboard_procs {
+                alvr_common::info!("HmdDriverFactory:   pid={pid:?} exe={exe:?}");
+            }
+            let early_hmd_initialization = !all_dashboard_procs.is_empty();
+            alvr_common::info!(
+                "HmdDriverFactory: dashboard_process_paths (exe resolved)={:?}, early_hmd_initialization={early_hmd_initialization}",
+                dashboard_process_paths
+            );
 
             CppInit(early_hmd_initialization);
         }
