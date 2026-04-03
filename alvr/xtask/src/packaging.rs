@@ -39,14 +39,13 @@ pub fn include_licenses(root_path: &Path, gpl: bool) {
     }
 
     // Gather licenses with cargo about
-    cmd!(sh, "cargo install cargo-about --version 0.6.4")
+    cmd!(sh, "cargo install cargo-about --version 0.8.4 --locked")
         .run()
         .unwrap();
     let licenses_template = afs::crate_dir("xtask").join("licenses_template.hbs");
-    let licenses_content = cmd!(sh, "cargo about generate {licenses_template}")
+    let licenses_output = licenses_dir.join("dependencies.html");
+    let licenses_content = cmd!(sh, "cargo about generate {licenses_template} -o {licenses_output}")
         .read()
-        .unwrap();
-    sh.write_file(licenses_dir.join("dependencies.html"), licenses_content)
         .unwrap();
 }
 
