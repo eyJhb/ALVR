@@ -80,9 +80,9 @@ jobs:
           set -e
           mkdir artifacts/
           cargo xtask build-streamer --platform linux --ci
-          tar -czf artifacts/alvr_streamer_linux.tar.gz ./build/alvr_streamer*
+          tar -cJf artifacts/alvr_streamer_linux.tar.xz ./build/alvr_streamer*
           cargo xtask build-launcher --platform linux --ci
-          tar -czf artifacts/alvr_launcher_linux.tar.gz ./build/alvr_launcher*
+          tar -cJf artifacts/alvr_launcher_linux.tar.xz ./build/alvr_launcher*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
