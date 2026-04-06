@@ -33,18 +33,21 @@ jobs:
 
       - run: cargo xtask clippy --ci
 
-      - name: Build and package ALVR
+      - name: Build and package ALVR (.zip)
         env:
           RUST_BACKTRACE: 1
         run: |
-          cargo xtask package-streamer --gpl --ci
-          cargo xtask package-launcher --ci
+          mkdir artifacts/
+          cargo xtask build-streamer --platform windows --ci
+          zip -r9X artifacts/alvr_streamer_windows.zip ./build/alvr_streamer*
+          cargo xtask build-launcher --platform windows --ci
+          zip -r9X artifacts/alvr_launcher_windows.zip ./build/alvr_launcher*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: windows-streamer
-          path: ./build/alvr_*.zip
+          name: check-windows
+          path: ./artifacts/*
 
   check-linux:
     runs-on: ubuntu-latest
@@ -74,14 +77,18 @@ jobs:
         env:
           RUST_BACKTRACE: 1
         run: |
-          cargo xtask package-streamer --gpl --ci
-          cargo xtask package-launcher --ci
+          set -e
+          mkdir artifacts/
+          cargo xtask build-streamer --platform linux --ci
+          tar -czf artifacts/alvr_streamer_linux.tar.gz ./build/alvr_streamer*
+          cargo xtask build-launcher --platform linux --ci
+          tar -czf artifacts/alvr_launcher_linux.tar.gz ./build/alvr_launcher*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: linux-streamer
-          path: ./build/alvr_*_linux.tar.gz
+          name: check-linux
+          path: ./artifacts/*
 
   check-macos:
     runs-on: macos-latest
