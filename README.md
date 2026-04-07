@@ -19,13 +19,14 @@ This is a fork of [ALVR](https://github.com/polygraphene/ALVR).
 |     Pico Neo 3/4/4 Ultra     |                                   :heavy_check_mark:                                   |
 |    Play For Dream YVR 1/2/MR |                                   :heavy_check_mark:                                   |
 | Vive Focus 3/Vision/XR Elite |                                   :heavy_check_mark:                                   |
-|           Lynx R1            |                                   :heavy_check_mark:                                   |
+|           Lynx R1            |                                   :warning: ***                                        |
 |     PhoneVR (smartphone)     |     :heavy_check_mark: ** ([repo](https://github.com/PhoneVR-Developers/PhoneVR))      |
 |        Android/Monado        |                                      :warning: **                                      |
 |          Oculus Go           |                 :x: ([old repo](https://github.com/polygraphene/ALVR))                 |
 
 \* ALVR for Quest 1 is not available through the Meta store.  
 \** Works on some smartphones, but has not been extensively tested.  
+\**** Temporarily removed
 
 |     PC OS      |                                    Support                                    |
 | :------------: | :---------------------------------------------------------------------------: |
